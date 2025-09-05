@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node --watch --env-file=.env index"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +13,8 @@
   "dependencies": {
     "axios": "^1.11.0",
     "cheerio": "^1.1.2",
-    "express": "^5.1.0"
+    "dayjs": "^1.11.14",
+    "express": "^5.1.0",
+    "pdf-parse": "^1.1.1"
   }
 }
