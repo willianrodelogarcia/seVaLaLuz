@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 
-const alertsRoute = require('./routes/alerts.route');
+const { alertsRoute } = require('./routes');
 
 const PORT = 3000;
 

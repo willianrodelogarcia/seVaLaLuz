@@ -13,4 +13,5 @@ const MOUTHS = {
   NOVIEMBRE: 11,
   DICIEMBRE: 12,
 };
-module.exports = { MOUTHS, urlSite: URL_SITE };
+const ZONA_CO = 'America/Bogota';
+module.exports = { MOUTHS, urlSite: URL_SITE, ZONA_CO };

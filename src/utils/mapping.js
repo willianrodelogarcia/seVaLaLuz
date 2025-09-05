@@ -1,15 +1,6 @@
 const dayjs = require('dayjs');
-
-const utc = require('dayjs/plugin/utc');
-const timezone = require('dayjs/plugin/timezone');
-
-dayjs.extend(utc);
-dayjs.extend(timezone);
-dayjs.locale('es');
-
-const ZONA_CO = 'America/Bogota';
-
-const { MOUTHS } = require('../utils/contants');
+const { MOUTHS, ZONA_CO } = require('./constants');
+const { format } = require('./normilizeText');
 
 const mappingData = html => {
   const rows = [];
@@ -19,7 +10,7 @@ const mappingData = html => {
   html(
     '#dnn_ctr1093_ViewEasyDNNNewsMain_ctl00_pnlListArticles > div > div > div > div',
   ).each((index, el) => {
-    const city = html(el)
+    const department = html(el)
       .find(`div > div > p.mantenimientos__title`)
       .text()
       .trim();
@@ -33,17 +24,17 @@ const mappingData = html => {
 
         html(e)
           .find(`#${idMouth} > div > ul > li`)
-          .each((j, li) => {
+          .each(async (j, li) => {
             const date = dateFormatter(html(li).text().trim());
             const url_pdf = html(li).find('a').attr('href');
             dates.push({ date, url_pdf });
           });
         mouths.push({ mouth, info: [...dates] });
+        dates.length = 0;
       });
 
-    rows.push({ city, mouths: [...mouths] });
+    rows.push({ department, mouths: [...mouths] });
     mouths.length = 0;
-    dates.length = 0;
   });
 
   return rows;
@@ -53,7 +44,7 @@ const dateFormatter = dateStr => {
   let match;
   const year = new Date().getFullYear();
   dateStr = dateStr.toLowerCase().trim();
-  // Caso: Rango "Del 25 al 30 de Agosto"
+
   match = dateStr.match(/del\s+(\d+)\s+al\s+(\d+)\s+de\s+(\w+)/i);
 
   if (match) {
@@ -66,32 +57,42 @@ const dateFormatter = dateStr => {
       endDay: format(`${year}-${mouth}-${endDay}`, ZONA_CO),
     };
   }
-  // Caso: Fecha única "El 15 de Agosto"
+
   match = dateStr.match(/el\s+(\d+)\s+de\s+(\w+)/i);
   if (match) {
     const day = parseInt(match[1], 10);
     const mouth = MOUTHS[match[2].toUpperCase()];
 
-    return format(`${year}-${mouth}-${day}`, ZONA_CO);
+    return { startDay: format(`${year}-${mouth}-${day}`, ZONA_CO) };
   }
-  // Caso: Rango "Del 25 y 30 de Agosto"
+
   match = dateStr.match(/del\s+(\d+)\s+y\s+(\d+)\s+de\s+(\w+)/i);
   if (match) {
     const [, d1, d2, mouthText] = match;
     const mouth = MOUTHS[mouthText.toUpperCase()];
     return {
-      inicio: format(`${year}-${mouth}-${Number(d1)}`),
-      fin: format(`${year}-${mouth}-${Number(d2)}`),
+      startDay: format(`${year}-${mouth}-${Number(d1)}`),
+      endDay: format(`${year}-${mouth}-${Number(d2)}`),
     };
   }
 
   return null;
 };
 
-const format = date => {
-  return dayjs.tz(date).format('YYYY-MM-DD');
-};
+function filterDates(info) {
+  const currentDay = dayjs();
+  return info.filter(item => {
+    const start = dayjs(item.date.startDay);
+    const end = item.date.endDay ? dayjs(item.date.endDay) : start;
+
+    return (
+      currentDay.isAfter(start.subtract(1, 'day')) &&
+      currentDay.isBefore(end.add(1, 'day'))
+    );
+  });
+}
 
 module.exports = {
   mappingData,
+  filterDates,
 };
